@@ -4,20 +4,15 @@
 #include "USB.h"
 #include "USBHIDKeyboard.h"
 
-// WiFi credentials for creating an Access Point
 const char* ap_ssid = "EPS";
 const char* ap_password = "12345678";
 
-// USB HID Keyboard object
 USBHIDKeyboard Keyboard;
 
-// Web server running on port 80
 WebServer server(80);
 
-// Pin for executing the sequence
 #define EXECUTE_BUTTON_PIN 14
 
-// String to hold the queued sequence
 String queuedSequence = "";
 
 void handleRoot() {
@@ -160,40 +155,28 @@ void handleQueueCommand() {
 }
 
 void setup() {
-  // Initialize Serial Monitor for debugging purposes
   Serial.begin(115200);
 
-  // Initialize USB HID Keyboard
   Keyboard.begin();
   USB.begin();
 
-  // Set up WiFi as an access point
-  Serial.println("Setting up WiFi Access Point...");
   WiFi.softAP(ap_ssid, ap_password);
-  Serial.print("Access Point IP address: ");
-  Serial.println(WiFi.softAPIP());
 
-  // Start the web server
   server.on("/", handleRoot);
   server.on("/send", handleSendCommand);
   server.on("/queue", handleQueueCommand);
   server.begin();
-  Serial.println("HTTP server started");
 
-  // Set up button pin
   pinMode(EXECUTE_BUTTON_PIN, INPUT_PULLUP);
 }
 
 void loop() {
-  // Handle web server
   server.handleClient();
 
-  // Check if the button is pressed
   if (digitalRead(EXECUTE_BUTTON_PIN) == LOW) {
-    delay(50); // Debounce delay
+    delay(50);
     if (digitalRead(EXECUTE_BUTTON_PIN) == LOW && queuedSequence.length() > 0) {
       parseAndExecuteSequence(queuedSequence.c_str());
-      // Wait until the button is released to prevent multiple triggers
       while (digitalRead(EXECUTE_BUTTON_PIN) == LOW) {
         delay(10);
       }
