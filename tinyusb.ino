@@ -8,17 +8,15 @@ const char* ap_ssid = "EPS";
 const char* ap_password = "12345678";
 
 USBHIDKeyboard Keyboard;
-
 WebServer server(80);
 
 #define EXECUTE_BUTTON_PIN 14
-
 String queuedSequence = "";
 
 void handleRoot() {
   String html = R"rawliteral(
   <!DOCTYPE html><html><body><h1>ESP32 Keyboard</h1>
-  <div><input type="text" id="command" placeholder="Enter command"><button id="addStep">Add Step</button></div>
+  <div><input type="text" id="command" placeholder="Enter command"><button id="addStep">Add Step</button><button id="addSleep">Add Sleep</button></div>
   <h2>Steps:</h2><ul id="stepsList"></ul>
   <button id="executeSteps">Execute Steps</button>
   <button id="clearSteps">Clear Steps</button>
@@ -32,20 +30,33 @@ void handleRoot() {
     var cmd=document.getElementById('command').value.trim();
     if(cmd){
       steps.push(cmd);
-      var li=document.createElement('li');
-      li.textContent=cmd+' ';
-      var removeBtn=document.createElement('button');
-      removeBtn.textContent='Remove';
-      removeBtn.addEventListener('click',function(){
-        var index=Array.from(document.getElementById('stepsList').children).indexOf(li);
-        steps.splice(index,1);
-        li.remove();
-      });
-      li.appendChild(removeBtn);
-      document.getElementById('stepsList').appendChild(li);
+      addStepToList(cmd);
       document.getElementById('command').value='';
     }
   });
+
+  document.getElementById('addSleep').addEventListener('click', function() {
+    var sleepDuration = prompt("Enter sleep duration in milliseconds:", "1000");
+    if (sleepDuration !== null && !isNaN(sleepDuration) && sleepDuration.trim() !== "") {
+      var sleepCmd = "sleep " + parseInt(sleepDuration);
+      steps.push(sleepCmd);
+      addStepToList(sleepCmd);
+    }
+  });
+
+  function addStepToList(cmd) {
+    var li=document.createElement('li');
+    li.textContent=cmd+' ';
+    var removeBtn=document.createElement('button');
+    removeBtn.textContent='Remove';
+    removeBtn.addEventListener('click',function(){
+      var index=Array.from(document.getElementById('stepsList').children).indexOf(li);
+      steps.splice(index,1);
+      li.remove();
+    });
+    li.appendChild(removeBtn);
+    document.getElementById('stepsList').appendChild(li);
+  }
 
   document.getElementById('executeSteps').addEventListener('click',function(){
     if(steps.length>0){
@@ -94,17 +105,7 @@ void handleRoot() {
         steps = lines.map(line => line.trim()).filter(line => line.length > 0);
         document.getElementById('stepsList').innerHTML = '';
         steps.forEach(function(cmd) {
-          var li = document.createElement('li');
-          li.textContent = cmd + ' ';
-          var removeBtn = document.createElement('button');
-          removeBtn.textContent = 'Remove';
-          removeBtn.addEventListener('click', function() {
-            var index = Array.from(document.getElementById('stepsList').children).indexOf(li);
-            steps.splice(index, 1);
-            li.remove();
-          });
-          li.appendChild(removeBtn);
-          document.getElementById('stepsList').appendChild(li);
+          addStepToList(cmd);
         });
         document.getElementById('status').innerText = "Steps loaded from file.";
       };
@@ -155,8 +156,6 @@ void handleQueueCommand() {
 }
 
 void setup() {
-  Serial.begin(115200);
-
   Keyboard.begin();
   USB.begin();
 
@@ -207,14 +206,44 @@ void executeCommand(const char* command) {
     Keyboard.press('d');
     delay(200);
     Keyboard.releaseAll();
+  } else if (strcasecmp(command, "press win+l") == 0) {
+    Keyboard.press(KEY_LEFT_GUI);
+    Keyboard.press('l');
+    delay(200);
+    Keyboard.releaseAll();
+  } else if (strcasecmp(command, "press win+x") == 0) {
+    Keyboard.press(KEY_LEFT_GUI);
+    Keyboard.press('x');
+    delay(200);
+    Keyboard.releaseAll();
   } else if (strcasecmp(command, "press ctrl+t") == 0) {
     Keyboard.press(KEY_LEFT_CTRL);
     Keyboard.press('t');
     delay(200);
     Keyboard.releaseAll();
+  } else if (strcasecmp(command, "press ctrl+x") == 0) {
+    Keyboard.press(KEY_LEFT_CTRL);
+    Keyboard.press('x');
+    delay(200);
+    Keyboard.releaseAll();
   } else if (strcasecmp(command, "press ctrl+w") == 0) {
     Keyboard.press(KEY_LEFT_CTRL);
     Keyboard.press('w');
+    delay(200);
+    Keyboard.releaseAll();
+  } else if (strcasecmp(command, "press ctrl+a") == 0) {
+    Keyboard.press(KEY_LEFT_CTRL);
+    Keyboard.press('a');
+    delay(200);
+    Keyboard.releaseAll();
+  } else if (strcasecmp(command, "press ctrl+c") == 0) {
+    Keyboard.press(KEY_LEFT_CTRL);
+    Keyboard.press('c');
+    delay(200);
+    Keyboard.releaseAll();
+  } else if (strcasecmp(command, "press ctrl+v") == 0) {
+    Keyboard.press(KEY_LEFT_CTRL);
+    Keyboard.press('v');
     delay(200);
     Keyboard.releaseAll();
   } else if (strcasecmp(command, "press ctrl+alt+t") == 0) {
@@ -236,6 +265,11 @@ void executeCommand(const char* command) {
     Keyboard.press(KEY_RETURN);
     delay(200);
     Keyboard.releaseAll();
+  } else if (strncasecmp(command, "sleep ", 6) == 0) {
+    int sleepDuration = atoi(command + 6);
+    if (sleepDuration > 0) {
+      delay(sleepDuration);
+    }
   } else {
     Keyboard.print(command);
   }
