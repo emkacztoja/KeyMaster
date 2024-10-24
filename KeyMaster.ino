@@ -15,7 +15,21 @@ String queuedSequence = "";
 
 void handleRoot() {
   String html = R"rawliteral(
-  <!DOCTYPE html><html><body><h1>ESP32 Keyboard</h1>
+  <!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {font-family: Arial, sans-serif; background: #f0f0f0; color: #333; text-align: center; padding: 20px;}
+    h1 {color: #333;}
+    button, input[type=text], input[type=file] {margin: 10px; padding: 10px; font-size: 16px;}
+    button {background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;}
+    button:hover {background-color: #45a049;}
+    #stepsList {list-style: none; padding: 0;}
+    #stepsList li {background: #fff; margin: 5px 0; padding: 10px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center;}
+    #stepsList button {background-color: #e74c3c;}
+    #stepsList button:hover {background-color: #c0392b;}
+    #status {margin-top: 20px; font-weight: bold; color: #555;}
+  </style>
+  </head><body>
+  <h1>ESP32 Keyboard</h1>
   <div><input type="text" id="command" placeholder="Enter command"><button id="addStep">Add Step</button><button id="addSleep">Add Sleep</button></div>
   <h2>Steps:</h2><ul id="stepsList"></ul>
   <button id="executeSteps">Execute Steps</button>
